@@ -107,8 +107,6 @@
   .action-link { font-size: 11px; color: #A19F9D; cursor: pointer; font-weight: 600; }
   .action-link:hover { color: #4A5A7A; }
 
-  .loading { font-size: 11px; color: #A19F9D; font-weight: 600; text-align: center; padding: 4px 0; }
-
   @keyframes pop {
     0%   { transform: scale(0.92); opacity: 0; }
     70%  { transform: scale(1.02); }
@@ -166,32 +164,28 @@
   var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqT2by-6A6AwRgNKp-crQj8o0OXJKyosCJgP_9IlIViVpchvbNbI8Cr6w2jPqx0HVupg/exec';
 
   var OPTIONS = [
-    { key: 'thriving',  symbol: '✨', label: 'thriving',       msg: 'we love this for you 🌟',              links: [] },
-    { key: 'allgood',   symbol: '🫶', label: 'all good',        msg: 'solid. keep going ♡',                  links: [] },
-    { key: 'hug',       symbol: '🧸', label: 'need a hug tbh',  msg: 'you deserve a little break 🧸',        links: [{ url: 'https://youtu.be/hkBhJxZupeE?si=9RqJiCh11b0RmW9J', text: 'enjoy 7 mins of the cutest baby animals 🐾' }] },
-    { key: 'survining', symbol: '👁️', label: 'survining',       msg: "honestly same. but you're doing it 👁️", links: [{ url: 'https://cat-bounce.com/', text: 'have some bouncing cats to keep survining 🐱' }] },
-    { key: 'sendhelp',  symbol: '🌀', label: 'send help',       msg: 'valid. pick a link 👇',                links: [{ url: 'https://screamintothevoid.com/', text: 'scream into the void 🌀' }, { url: 'https://theuselessweb.com/', text: 'take me somewhere useless 🌐' }] }
+    { key: 'thriving',  symbol: '✨', label: 'thriving',      msg: 'we love this for you 🌟',               links: [] },
+    { key: 'allgood',   symbol: '🫶', label: 'all good',       msg: 'solid. keep going ♡',                   links: [] },
+    { key: 'hug',       symbol: '🧸', label: 'need a hug tbh', msg: 'you deserve a little break 🧸',         links: [{ url: 'https://youtu.be/hkBhJxZupeE?si=9RqJiCh11b0RmW9J', text: 'enjoy 7 mins of the cutest baby animals 🐾' }] },
+    { key: 'survining', symbol: '👁️', label: 'survining',      msg: "honestly same. but you're doing it 👁️", links: [{ url: 'https://cat-bounce.com/', text: 'have some bouncing cats to keep survining 🐱' }] },
+    { key: 'sendhelp',  symbol: '🌀', label: 'send help',      msg: 'valid. pick a link 👇',                 links: [{ url: 'https://screamintothevoid.com/', text: 'scream into the void 🌀' }, { url: 'https://theuselessweb.com/', text: 'take me somewhere useless 🌐' }] }
   ];
 
   var myVote = null;
   var panelOpen = false;
   var liveTally = { thriving: 0, allgood: 0, hug: 0, survining: 0, sendhelp: 0 };
 
-  // load today's tally on page load
+  // fetch today's tally on load
   fetch(SCRIPT_URL + '?action=tally')
     .then(function(r) { return r.json(); })
-    .then(function(data) {
-      liveTally = data;
-      updatePillCount();
-    })
+    .then(function(data) { liveTally = data; })
     .catch(function() {});
 
-  function updatePillCount() {
-    var total = Object.values(liveTally).reduce(function(a,b){ return a+b; }, 0);
-    if (myVote !== null && total > 0) {
-      document.getElementById('pill-text').textContent = total + ' checked in today';
-    }
-  }
+  // close panel when user clicks outside the iframe
+  window.addEventListener('blur', function() {
+    panelOpen = false;
+    document.getElementById('panel').classList.remove('open');
+  });
 
   function togglePanel() {
     panelOpen = !panelOpen;
@@ -208,25 +202,9 @@
   function vote(idx) {
     var opt = OPTIONS[idx];
     myVote = idx;
-
-    // send to google sheets
-    fetch(SCRIPT_URL + '?action=vote&option=' + opt.key)
-      .then(function(r) { return r.json(); })
-      .then(function() {
-        // refresh tally after voting
-        return fetch(SCRIPT_URL + '?action=tally');
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        liveTally = data;
-        updatePillCount();
-      })
-      .catch(function() {});
-
-    // optimistically update local tally too
     liveTally[opt.key]++;
 
-    var total = Object.values(liveTally).reduce(function(a,b){ return a+b; }, 0);
+    var total = Object.values(liveTally).reduce(function(a, b) { return a + b; }, 0);
     var pill = document.getElementById('pill');
     pill.classList.add('voted');
     document.getElementById('pill-text').textContent = total + ' checked in today';
@@ -241,6 +219,20 @@
     document.getElementById('vote-view').style.display = 'none';
     document.getElementById('results').style.display = 'none';
     document.getElementById('care').style.display = 'block';
+
+    // write to google sheets
+    fetch(SCRIPT_URL + '?action=vote&option=' + opt.key)
+      .then(function(r) { return r.json(); })
+      .then(function() {
+        return fetch(SCRIPT_URL + '?action=tally');
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        liveTally = data;
+        var t = Object.values(liveTally).reduce(function(a, b) { return a + b; }, 0);
+        document.getElementById('pill-text').textContent = t + ' checked in today';
+      })
+      .catch(function() {});
   }
 
   function changeAnswer() {
@@ -260,20 +252,17 @@
   }
 
   function showResults() {
-    // fetch fresh tally before showing
     fetch(SCRIPT_URL + '?action=tally')
       .then(function(r) { return r.json(); })
       .then(function(data) {
         liveTally = data;
         renderResults();
       })
-      .catch(function() {
-        renderResults();
-      });
+      .catch(function() { renderResults(); });
   }
 
   function renderResults() {
-    var total = Object.values(liveTally).reduce(function(a,b){ return a+b; }, 0);
+    var total = Object.values(liveTally).reduce(function(a, b) { return a + b; }, 0);
     var max = Math.max.apply(null, Object.values(liveTally));
     var myOpt = OPTIONS[myVote];
 
@@ -281,7 +270,7 @@
     document.getElementById('results-rows').innerHTML = OPTIONS.map(function(o) {
       var count = liveTally[o.key] || 0;
       var pct = max > 0 ? Math.round((count / max) * 100) : 0;
-      var isMine = o.key === myOpt.key;
+      var isMine = myOpt && o.key === myOpt.key;
       return '<div class="result-row">' +
         '<div class="r-sym">' + o.symbol + '</div>' +
         '<div class="r-name" style="' + (isMine ? 'color:#4A5A7A;font-weight:700;' : '') + '">' + o.label + (isMine ? ' ←' : '') + '</div>' +
