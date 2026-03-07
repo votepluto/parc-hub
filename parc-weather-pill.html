@@ -8,13 +8,17 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
+  html, body {
+    width: 100%;
+    height: 100%;
     background: transparent;
+    overflow: hidden;
+  }
+
+  body {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    padding: 12px;
   }
 
   .pill {
@@ -48,8 +52,6 @@
     border-radius: 1px;
   }
 
-  .pill-icon { font-size: 16px; line-height: 1; }
-
   .pill-item { display: flex; align-items: center; gap: 6px; }
 
   .pill-label {
@@ -62,11 +64,12 @@
 
   .pill-value { font-size: 14px; font-weight: 700; }
 
-  /* loading state */
   .pill-loading {
     opacity: 0.5;
     font-size: 13px;
     letter-spacing: 0.05em;
+    font-family: 'Nunito', sans-serif;
+    color: rgba(255,255,255,0.8);
   }
 
   @keyframes fadeIn {
@@ -75,38 +78,15 @@
   }
 
   .pill { animation: fadeIn 0.5s ease both; }
-
-  /* ── DEMO BACKGROUND (remove when embedding) ── */
-  .demo-bg {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg, #8FAB88 0%, #6E8E7A 60%, #5C7D70 100%);
-    z-index: -1;
-  }
 </style>
 </head>
 <body>
-
-<div class="demo-bg"></div>
 
 <div class="pill" id="pill">
   <span class="pill-loading">fetching weather…</span>
 </div>
 
 <script>
-  function weatherIcon(code, isDay) {
-    const d = isDay;
-    if (code === 0)           return d ? '☀️' : '🌙';
-    if (code <= 2)            return d ? '🌤️' : '🌙';
-    if (code === 3)           return '☁️';
-    if (code <= 48)           return '🌫️';
-    if (code <= 55)           return '🌦️';
-    if (code <= 65)           return '🌧️';
-    if (code <= 77)           return '❄️';
-    if (code <= 82)           return '🌦️';
-    return '⛈️';
-  }
-
   function weatherLabel(code) {
     if (code === 0)  return 'Clear';
     if (code <= 2)   return 'Mostly clear';
@@ -123,7 +103,7 @@
     const lat = -37.8136, lon = 144.9631;
     const url = `https://api.open-meteo.com/v1/forecast`
       + `?latitude=${lat}&longitude=${lon}`
-      + `&current=temperature_2m,weather_code,is_day,uv_index`
+      + `&current=temperature_2m,weather_code,is_day`
       + `&daily=uv_index_max`
       + `&timezone=Australia%2FMelbourne&forecast_days=1`;
 
@@ -131,14 +111,12 @@
       const res  = await fetch(url);
       const data = await res.json();
       const c    = data.current;
-      const uv   = data.daily?.uv_index_max?.[0] ?? c.uv_index ?? '—';
+      const uv   = data.daily?.uv_index_max?.[0] ?? '—';
 
-      const icon  = weatherIcon(c.weather_code, c.is_day);
-      const label = weatherLabel(c.weather_code);
-      const temp  = Math.round(c.temperature_2m);
+      const label  = weatherLabel(c.weather_code);
+      const temp   = Math.round(c.temperature_2m);
+      const uvNum  = parseFloat(uv);
 
-      // UV label
-      const uvNum = parseFloat(uv);
       let uvLabel = '—';
       if (!isNaN(uvNum)) {
         if (uvNum <= 2)       uvLabel = 'Low';
@@ -160,7 +138,6 @@
       `;
     } catch (e) {
       document.getElementById('pill').innerHTML = `
-        <span class="pill-icon">🌿</span>
         <span class="pill-value">Weather unavailable</span>
       `;
     }
