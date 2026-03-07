@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PARC Greeting</title>
+<title>PARC Bar</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -17,32 +17,127 @@
     font-family: 'Nunito', sans-serif;
     font-size: 14px;
     font-weight: 600;
-    color: #4A3D6B;
-    background: #EEE8F5;
+    color: #2C3A52;
+    background: #EDF0F5;
     border-radius: 4px;
     overflow: hidden;
     white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
   }
+  .bar:hover { background: #E0E6EF; }
 
-  .seg { padding: 9px 16px; }
-  .divider { width: 1px; height: 20px; background: rgba(74, 61, 107, 0.2); flex-shrink: 0; }
+  .seg { padding: 9px 16px; display: flex; align-items: center; gap: 7px; }
+  .divider { width: 1px; height: 20px; background: rgba(44, 58, 82, 0.2); flex-shrink: 0; }
   .seg-greeting { font-weight: 700; }
   .seg-date     { font-weight: 600; }
   .seg-time     { font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
-  .seg-moon     { font-weight: 600; letter-spacing: 0.02em; }
+  .seg-moon     { font-weight: 600; }
+  .seg-weather  { font-weight: 600; }
+
+  /* ── WEATHER ICON ANIMATIONS ── */
+  .wx-icon { position: relative; width: 20px; height: 20px; flex-shrink: 0; }
+
+  /* Sun */
+  .sun-circle {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #f5a623;
+  }
+  .sun-ray {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 2px; height: 5px;
+    background: #f5a623;
+    border-radius: 1px;
+    transform-origin: 50% 100%;
+    margin-left: -1px;
+    margin-top: -10px;
+  }
+  @keyframes spin-slow { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+  .sun-rays { position: absolute; top: 0; left: 0; width: 100%; height: 100%; animation: spin-slow 8s linear infinite; }
+
+  /* Cloud */
+  .cloud {
+    position: absolute;
+    background: #b0bec5;
+    border-radius: 10px;
+  }
+  .cloud-main { width: 14px; height: 8px; bottom: 4px; left: 3px; }
+  .cloud-top  { width: 8px; height: 8px; border-radius: 50%; bottom: 8px; left: 5px; }
+  @keyframes float { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+  .cloud-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 100%; animation: float 3s ease-in-out infinite; }
+
+  /* Sun + cloud */
+  .sun-sm {
+    position: absolute;
+    top: 1px; right: 1px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #f5a623;
+  }
+
+  /* Rain */
+  .rain-drop {
+    position: absolute;
+    width: 2px;
+    border-radius: 1px;
+    background: #5b9bd5;
+  }
+  @keyframes fall { 0% { opacity: 0; transform: translateY(-4px); } 60% { opacity: 1; } 100% { opacity: 0; transform: translateY(6px); } }
+
+  /* Storm */
+  .bolt {
+    position: absolute;
+    bottom: 2px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #f5c623;
+  }
+  @keyframes flash { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+  .bolt { animation: flash 1.2s ease-in-out infinite; }
+
+  /* Snow */
+  .snowflake {
+    position: absolute;
+    font-size: 9px;
+    color: #90caf9;
+  }
+  @keyframes snow-fall { 0% { opacity: 0; transform: translateY(-4px) rotate(0deg); } 60% { opacity: 1; } 100% { opacity: 0; transform: translateY(8px) rotate(180deg); } }
+
+  /* Fog */
+  .fog-line {
+    position: absolute;
+    height: 2px;
+    border-radius: 1px;
+    background: #b0bec5;
+    left: 2px;
+  }
+  @keyframes fog-drift { 0%,100% { opacity: 0.4; transform: translateX(0); } 50% { opacity: 0.9; transform: translateX(2px); } }
 </style>
 </head>
 <body>
 
-<div class="bar">
-  <div class="seg seg-greeting" id="greeting">Good morning, YPARC team. ♡</div>
+<a class="bar" id="bar" href="https://www.windy.com/?-37.813,144.963,10" target="_blank">
+  <div class="seg seg-greeting">
+    <span id="greeting">Good morning, YPARC team. ♡</span>
+  </div>
   <div class="divider"></div>
   <div class="seg seg-date" id="date-seg">—</div>
   <div class="divider"></div>
   <div class="seg seg-time" id="time-seg">—</div>
   <div class="divider"></div>
   <div class="seg seg-moon" id="moon-seg">—</div>
-</div>
+  <div class="divider"></div>
+  <div class="seg seg-weather">
+    <div class="wx-icon" id="wx-icon"></div>
+    <span id="wx-text">—</span>
+  </div>
+</a>
 
 <script>
   const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -62,54 +157,151 @@
   }
 
   function moonPhase(date) {
-    // Calculate approximate moon phase
-    const year  = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day   = date.getDate();
-
-    let c, e, jd, b;
-    if (month < 3) { year--; month += 12; }
-    const a = Math.floor(year / 100);
-    const b2 = 2 - a + Math.floor(a / 4);
-    jd = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + b2 - 1524.5;
-    const daysSinceNew = (jd - 2451549.5) % 29.53058867;
-    const phase = ((daysSinceNew % 29.53058867) + 29.53058867) % 29.53058867;
-
-    if (phase < 1.85)       return '\u25CF New Moon';
-    if (phase < 7.38)       return '\u25D1 Waxing Crescent';
-    if (phase < 9.22)       return '\u25D0 First Quarter';
-    if (phase < 14.77)      return '\u25D1 Waxing Gibbous';
-    if (phase < 16.61)      return '\u25CB Full Moon';
-    if (phase < 22.15)      return '\u25D1 Waning Gibbous';
-    if (phase < 23.99)      return '\u25D0 Last Quarter';
-    if (phase < 29.53)      return '\u25D1 Waning Crescent';
-    return '\u25CF New Moon';
+    const y = date.getFullYear(), mo = date.getMonth() + 1, d = date.getDate();
+    const a = Math.floor(y / 100);
+    const b = 2 - a + Math.floor(a / 4);
+    const jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (mo + 1)) + d + b - 1524.5;
+    const phase = ((jd - 2451549.5) % 29.53058867 + 29.53058867) % 29.53058867;
+    if (phase < 1.85)  return '\u25CF New Moon';
+    if (phase < 7.38)  return '\u25D1 Waxing Crescent';
+    if (phase < 9.22)  return '\u25D0 First Quarter';
+    if (phase < 14.77) return '\u25D1 Waxing Gibbous';
+    if (phase < 16.61) return '\u25CB Full Moon';
+    if (phase < 22.15) return '\u25D1 Waning Gibbous';
+    if (phase < 23.99) return '\u25D0 Last Quarter';
+    return '\u25D1 Waning Crescent';
   }
 
-  function update() {
+  function weatherLabel(code) {
+    if (code === 0)        return 'Clear';
+    if (code <= 2)         return 'Mostly clear';
+    if (code === 3)        return 'Overcast';
+    if (code <= 48)        return 'Foggy';
+    if (code <= 55)        return 'Drizzle';
+    if (code <= 65)        return 'Rainy';
+    if (code <= 77)        return 'Snowy';
+    if (code <= 82)        return 'Showers';
+    if (code <= 99)        return 'Stormy';
+    return 'Unknown';
+  }
+
+  function weatherType(code) {
+    if (code === 0)        return 'sunny';
+    if (code <= 2)         return 'partly';
+    if (code === 3)        return 'cloudy';
+    if (code <= 48)        return 'foggy';
+    if (code <= 65)        return 'rainy';
+    if (code <= 77)        return 'snowy';
+    if (code <= 82)        return 'rainy';
+    if (code <= 99)        return 'stormy';
+    return 'cloudy';
+  }
+
+  function buildIcon(type) {
+    const el = document.getElementById('wx-icon');
+    el.innerHTML = '';
+
+    if (type === 'sunny') {
+      el.innerHTML = `
+        <div class="sun-circle"></div>
+        <div class="sun-rays">
+          ${[0,45,90,135,180,225,270,315].map(deg =>
+            `<div class="sun-ray" style="transform:rotate(${deg}deg) translateY(-9px)"></div>`
+          ).join('')}
+        </div>`;
+
+    } else if (type === 'partly') {
+      el.innerHTML = `
+        <div class="sun-sm"></div>
+        <div class="cloud-wrap">
+          <div class="cloud cloud-top"></div>
+          <div class="cloud cloud-main"></div>
+        </div>`;
+
+    } else if (type === 'cloudy') {
+      el.innerHTML = `
+        <div class="cloud-wrap">
+          <div class="cloud cloud-top"></div>
+          <div class="cloud cloud-main"></div>
+        </div>`;
+
+    } else if (type === 'rainy') {
+      el.innerHTML = `
+        <div class="cloud-wrap">
+          <div class="cloud cloud-top"></div>
+          <div class="cloud cloud-main"></div>
+        </div>
+        ${[3,7,11].map((l,i) =>
+          `<div class="rain-drop" style="left:${l}px;bottom:1px;height:5px;animation:fall ${0.8+i*0.15}s ease-in infinite ${i*0.2}s"></div>`
+        ).join('')}`;
+
+    } else if (type === 'stormy') {
+      el.innerHTML = `
+        <div class="cloud-wrap">
+          <div class="cloud cloud-top"></div>
+          <div class="cloud cloud-main"></div>
+        </div>
+        <div class="bolt">&#9889;</div>`;
+
+    } else if (type === 'snowy') {
+      el.innerHTML = `
+        <div class="cloud-wrap">
+          <div class="cloud cloud-top"></div>
+          <div class="cloud cloud-main"></div>
+        </div>
+        ${[3,8,13].map((l,i) =>
+          `<div class="snowflake" style="left:${l}px;bottom:0;animation:snow-fall ${1+i*0.2}s ease-in infinite ${i*0.3}s">*</div>`
+        ).join('')}`;
+
+    } else if (type === 'foggy') {
+      el.innerHTML = `
+        ${[2,4,6,8,10].map((t,i) =>
+          `<div class="fog-line" style="top:${t}px;width:${14-i%2*4}px;animation:fog-drift ${2+i*0.3}s ease-in-out infinite ${i*0.2}s"></div>`
+        ).join('')}`;
+    }
+  }
+
+  function updateClock() {
     const now = new Date();
-    const h   = now.getHours();
-    const m   = now.getMinutes();
-    const s   = now.getSeconds();
-
+    const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
     document.getElementById('greeting').textContent = greeting(h);
-
-    const day   = DAYS[now.getDay()];
-    const date  = ordinal(now.getDate());
-    const month = MONTHS[now.getMonth()];
-    const year  = now.getFullYear();
+    const day = DAYS[now.getDay()], date = ordinal(now.getDate()), month = MONTHS[now.getMonth()], year = now.getFullYear();
     document.getElementById('date-seg').textContent = `${day} ${date} ${month} ${year}`;
-
-    const hh = String(h).padStart(2, '0');
-    const mm = String(m).padStart(2, '0');
-    const ss = String(s).padStart(2, '0');
+    const hh = String(h).padStart(2,'0'), mm = String(m).padStart(2,'0'), ss = String(s).padStart(2,'0');
     document.getElementById('time-seg').textContent = `${hh}:${mm}:${ss} hrs`;
-
     document.getElementById('moon-seg').textContent = moonPhase(now);
   }
 
-  update();
-  setInterval(update, 1000);
+  async function loadWeather() {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=-37.8136&longitude=144.9631&current=temperature_2m,weather_code&daily=uv_index_max&timezone=Australia%2FMelbourne&forecast_days=1`;
+      const res  = await fetch(url);
+      const data = await res.json();
+      const code = data.current.weather_code;
+      const temp = Math.round(data.current.temperature_2m);
+      const uv   = data.daily?.uv_index_max?.[0];
+      const uvNum = parseFloat(uv);
+      let uvLabel = '';
+      if (!isNaN(uvNum)) {
+        if (uvNum <= 2) uvLabel = 'Low';
+        else if (uvNum <= 5) uvLabel = 'Moderate';
+        else if (uvNum <= 7) uvLabel = 'High';
+        else if (uvNum <= 10) uvLabel = 'Very high';
+        else uvLabel = 'Extreme';
+      }
+      const label = weatherLabel(code);
+      const type  = weatherType(code);
+      document.getElementById('wx-text').textContent = `${temp}°C · ${label} · UV ${Math.round(uvNum)} · ${uvLabel}`;
+      buildIcon(type);
+    } catch(e) {
+      document.getElementById('wx-text').textContent = 'Weather unavailable';
+    }
+  }
+
+  updateClock();
+  setInterval(updateClock, 1000);
+  loadWeather();
+  setInterval(loadWeather, 30 * 60 * 1000);
 </script>
 
 </body>
