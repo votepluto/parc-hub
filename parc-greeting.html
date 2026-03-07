@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARC Greeting</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: transparent; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: flex-start; padding: 0 2px; }
+
+  .bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4A3D6B;
+    background: #EEE8F5;
+    border-radius: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .seg { padding: 9px 16px; }
+  .divider { width: 1px; height: 20px; background: rgba(74, 61, 107, 0.2); flex-shrink: 0; }
+  .seg-greeting { font-weight: 700; }
+  .seg-date     { font-weight: 600; }
+  .seg-time     { font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+  .seg-moon     { font-weight: 600; letter-spacing: 0.02em; }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="seg seg-greeting" id="greeting">Good morning, YPARC team. ♡</div>
+  <div class="divider"></div>
+  <div class="seg seg-date" id="date-seg">—</div>
+  <div class="divider"></div>
+  <div class="seg seg-time" id="time-seg">—</div>
+  <div class="divider"></div>
+  <div class="seg seg-moon" id="moon-seg">—</div>
+</div>
+
+<script>
+  const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function ordinal(n) {
+    const s = ['th','st','nd','rd'];
+    const v = n % 100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
+
+  function greeting(h) {
+    if (h >= 5  && h < 12) return 'Good morning, YPARC team. \u2661';
+    if (h >= 12 && h < 17) return 'Good afternoon, YPARC team. \u2661';
+    if (h >= 17 && h < 21) return 'Good evening, YPARC team. \u2661';
+    return 'Good night, YPARC team. \u2661';
+  }
+
+  function moonPhase(date) {
+    // Calculate approximate moon phase
+    const year  = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day   = date.getDate();
+
+    let c, e, jd, b;
+    if (month < 3) { year--; month += 12; }
+    const a = Math.floor(year / 100);
+    const b2 = 2 - a + Math.floor(a / 4);
+    jd = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + b2 - 1524.5;
+    const daysSinceNew = (jd - 2451549.5) % 29.53058867;
+    const phase = ((daysSinceNew % 29.53058867) + 29.53058867) % 29.53058867;
+
+    if (phase < 1.85)       return '\u25CF New Moon';
+    if (phase < 7.38)       return '\u25D1 Waxing Crescent';
+    if (phase < 9.22)       return '\u25D0 First Quarter';
+    if (phase < 14.77)      return '\u25D1 Waxing Gibbous';
+    if (phase < 16.61)      return '\u25CB Full Moon';
+    if (phase < 22.15)      return '\u25D1 Waning Gibbous';
+    if (phase < 23.99)      return '\u25D0 Last Quarter';
+    if (phase < 29.53)      return '\u25D1 Waning Crescent';
+    return '\u25CF New Moon';
+  }
+
+  function update() {
+    const now = new Date();
+    const h   = now.getHours();
+    const m   = now.getMinutes();
+    const s   = now.getSeconds();
+
+    document.getElementById('greeting').textContent = greeting(h);
+
+    const day   = DAYS[now.getDay()];
+    const date  = ordinal(now.getDate());
+    const month = MONTHS[now.getMonth()];
+    const year  = now.getFullYear();
+    document.getElementById('date-seg').textContent = `${day} ${date} ${month} ${year}`;
+
+    const hh = String(h).padStart(2, '0');
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+    document.getElementById('time-seg').textContent = `${hh}:${mm}:${ss} hrs`;
+
+    document.getElementById('moon-seg').textContent = moonPhase(now);
+  }
+
+  update();
+  setInterval(update, 1000);
+</script>
+
+</body>
+</html>
