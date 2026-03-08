@@ -198,7 +198,7 @@
   <div class="tab-bar">
     <div class="tab active" onclick="switchTab(0)">mental health <span class="tab-badge" id="badge-0"></span></div>
     <div class="tab" onclick="switchTab(1)">health policy <span class="tab-badge" id="badge-1"></span></div>
-    <div class="tab" onclick="switchTab(2)">all <span class="tab-badge" id="badge-2"></span></div>
+    <div class="tab" onclick="switchTab(2)">good things <span class="tab-badge" id="badge-2"></span></div>
   </div>
 
   <div class="tab-content active" id="tab-0"><div id="content-0"></div></div>
@@ -217,27 +217,41 @@
   var RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
   var SOURCE_META = {
-    'The Conversation': 'Independent academic analysis',
-    'SANE Australia':   'Mental health support & research',
+    'The Conversation': 'Evidence-based academic analysis',
     'Mental Health AU': 'National peak body for mental health',
-    'AIHW':             'Australian health & welfare data',
+    'MHFA Australia':   'Mental health first aid & practical resources',
+    'PsyPost':          'Latest psychology & neuroscience research',
+    'ScienceDaily':     'Mind & brain science news',
+    'APS':              'Australian Psychological Society',
+    'Psychreg':         'Broad psychology topics & wellbeing',
+    'Dept of Health':   'Australian Government health news',
     'Croakey Health':   'Independent health policy journalism',
+    'Positive News':    'Solutions-focused good news stories',
+    'Good News Network':'Uplifting news from around the world',
   };
 
   var SOURCES = {
     mentalHealth: [
       { name: 'The Conversation', url: 'https://theconversation.com/au/topics/mental-health-620/articles.atom', color: '#8A7AAA' },
-      { name: 'SANE Australia',   url: 'https://www.sane.org/rss',                                             color: '#6B5B8A' },
-      { name: 'Mental Health AU', url: 'https://mhaustralia.org/rss.xml',                                      color: '#4A3D6B' },
+      { name: 'Mental Health AU', url: 'https://mhaustralia.org/taxonomy/term/1/feed',                          color: '#6B5B8A' },
+      { name: 'MHFA Australia',   url: 'https://mhfa.com.au/feed',                                              color: '#4A3D6B' },
+      { name: 'PsyPost',          url: 'https://www.psypost.org/feed',                                          color: '#4A5A7A' },
+      { name: 'ScienceDaily',     url: 'https://www.sciencedaily.com/rss/mind_brain.xml',                       color: '#6B8A7A' },
+      { name: 'APS',              url: 'https://www.psychologicalscience.org/feed',                              color: '#7A6B8A' },
+      { name: 'Psychreg',         url: 'https://www.psychreg.org/feed',                                         color: '#5A7A8A' },
     ],
     healthPolicy: [
       { name: 'The Conversation', url: 'https://theconversation.com/au/topics/health-policy-2485/articles.atom', color: '#8A7AAA' },
-      { name: 'AIHW',             url: 'https://www.aihw.gov.au/rss/news',                                       color: '#6B5B8A' },
-      { name: 'Croakey Health',   url: 'https://www.croakey.org/feed/',                                          color: '#4A5A7A' },
+      { name: 'Dept of Health',   url: 'https://www.health.gov.au/news/rss.xml',                                  color: '#6B5B8A' },
+      { name: 'Croakey Health',   url: 'https://www.croakey.org/feed/',                                           color: '#4A5A7A' },
+    ],
+    goodThings: [
+      { name: 'Positive News',      url: 'https://www.positive.news/feed/',              color: '#6B8A6B' },
+      { name: 'Good News Network',  url: 'https://www.goodnewsnetwork.org/feed/',         color: '#4A7A5A' },
     ]
   };
 
-  var mhItems = [], hpItems = [];
+  var mhItems = [], hpItems = [], gtItems = [];
   var loadedAt = null;
 
   function typewriter() {
@@ -338,7 +352,7 @@
       el.textContent = ''; el.classList.remove('visible');
     });
 
-    mhItems = []; hpItems = [];
+    mhItems = []; hpItems = []; gtItems = [];
     loadedAt = new Date();
 
     var fullDate = loadedAt.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) +
@@ -347,17 +361,15 @@
       loadedAt.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
     document.getElementById('ts-tooltip').textContent = 'last updated ' + fullDate;
 
-    var mhDone = false, hpDone = false;
+    var mhDone = false, hpDone = false, gtDone = false;
     function checkDone() {
-      if (mhDone && hpDone) setRefreshDone();
+      if (mhDone && hpDone && gtDone) setRefreshDone();
     }
 
     Promise.all(SOURCES.mentalHealth.map(fetchFeed)).then(function(results) {
       results.forEach(function(i) { mhItems = mhItems.concat(i); });
-      var n = renderItems(mhItems, 'content-0');
+      renderItems(mhItems, 'content-0');
       setBadge('badge-0', mhItems.slice(0,6).length);
-      renderItems(mhItems.concat(hpItems), 'content-2');
-      setBadge('badge-2', Math.min(6, mhItems.length + hpItems.length));
       mhDone = true; checkDone();
     });
 
@@ -365,9 +377,14 @@
       results.forEach(function(i) { hpItems = hpItems.concat(i); });
       renderItems(hpItems, 'content-1');
       setBadge('badge-1', hpItems.slice(0,6).length);
-      renderItems(mhItems.concat(hpItems), 'content-2');
-      setBadge('badge-2', Math.min(6, mhItems.length + hpItems.length));
       hpDone = true; checkDone();
+    });
+
+    Promise.all(SOURCES.goodThings.map(fetchFeed)).then(function(results) {
+      results.forEach(function(i) { gtItems = gtItems.concat(i); });
+      renderItems(gtItems, 'content-2');
+      setBadge('badge-2', gtItems.slice(0,6).length);
+      gtDone = true; checkDone();
     });
   }
 
