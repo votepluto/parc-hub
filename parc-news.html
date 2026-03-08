@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARC News</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: #ffffff;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+  }
+
+  .widget {
+    background: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  /* HEADER */
+  .widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 0;
+    margin-bottom: 12px;
+  }
+  .widget-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2C3A52;
+  }
+  .last-updated {
+    font-size: 10px;
+    color: #A19F9D;
+    font-weight: 600;
+  }
+
+  /* TABS */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid #EDEBE9;
+    padding: 0 16px;
+    gap: 2px;
+  }
+  .tab {
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #A19F9D;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .tab:hover { color: #4A3D6B; }
+  .tab.active { color: #4A3D6B; border-bottom-color: #4A3D6B; }
+
+  /* CONTENT */
+  .tab-content { display: none; padding: 12px 16px 8px; }
+  .tab-content.active { display: block; }
+
+  /* LOADING / ERROR */
+  .status {
+    font-size: 12px;
+    color: #A19F9D;
+    font-weight: 600;
+    padding: 16px 0;
+    text-align: center;
+  }
+
+  /* FEED ITEMS */
+  .feed-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #F3F2F1;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    transition: all 0.1s;
+  }
+  .feed-item:first-child { padding-top: 0; }
+  .feed-item:last-child { border-bottom: none; padding-bottom: 4px; }
+  .feed-item:hover .feed-title { color: #4A3D6B; }
+
+  .feed-source-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .feed-source-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .feed-source-name {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #A19F9D;
+  }
+  .feed-date {
+    font-size: 10px;
+    color: #C8C6C4;
+    font-weight: 600;
+  }
+  .feed-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2C3A52;
+    line-height: 1.45;
+    transition: color 0.1s;
+  }
+
+  /* FOOTER */
+  .widget-footer {
+    padding: 8px 16px 12px;
+    text-align: center;
+    border-top: 1px solid #EDEBE9;
+  }
+  .refresh-btn {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8A7AAA;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+  .refresh-btn:hover { color: #4A3D6B; }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <div class="widget-header">
+    <div class="widget-title">📰 news & updates</div>
+    <div class="last-updated" id="last-updated"></div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab(0)">mental health</div>
+    <div class="tab" onclick="switchTab(1)">health policy</div>
+    <div class="tab" onclick="switchTab(2)">all</div>
+  </div>
+
+  <div class="tab-content active" id="tab-0">
+    <div class="status" id="status-0">loading...</div>
+  </div>
+  <div class="tab-content" id="tab-1">
+    <div class="status" id="status-1">loading...</div>
+  </div>
+  <div class="tab-content" id="tab-2">
+    <div class="status" id="status-2">loading...</div>
+  </div>
+
+  <div class="widget-footer">
+    <button class="refresh-btn" onclick="loadAll()">↻ refresh</button>
+  </div>
+</div>
+
+<script>
+  var RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+  var SOURCES = {
+    mentalHealth: [
+      {
+        name: 'The Conversation',
+        url: 'https://theconversation.com/au/topics/mental-health-620/articles.atom',
+        color: '#8A7AAA'
+      },
+      {
+        name: 'Beyond Blue',
+        url: 'https://www.beyondblue.org.au/rss/news',
+        color: '#4A5A7A'
+      },
+      {
+        name: 'ABC Health',
+        url: 'https://www.abc.net.au/news/feed/51120/rss.xml',
+        color: '#7AAA8A'
+      }
+    ],
+    healthPolicy: [
+      {
+        name: 'Dept of Health',
+        url: 'https://www.health.gov.au/using-our-websites/subscribe/department-of-health-and-aged-care-news',
+        color: '#4A5A7A'
+      },
+      {
+        name: 'The Conversation',
+        url: 'https://theconversation.com/au/topics/health-policy-2485/articles.atom',
+        color: '#8A7AAA'
+      },
+      {
+        name: 'AIHW',
+        url: 'https://www.aihw.gov.au/rss/news',
+        color: '#6B8AAA'
+      }
+    ]
+  };
+
+  var allItems = [];
+  var mhItems  = [];
+  var hpItems  = [];
+
+  function fetchFeed(source) {
+    return fetch(RSS2JSON + encodeURIComponent(source.url))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.items) return [];
+        return data.items.slice(0, 4).map(function(item) {
+          return {
+            title: item.title,
+            link:  item.link,
+            date:  item.pubDate ? new Date(item.pubDate) : null,
+            source: source.name,
+            color:  source.color
+          };
+        });
+      })
+      .catch(function() { return []; });
+  }
+
+  function timeAgo(date) {
+    if (!date) return '';
+    var diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+    return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  }
+
+  function renderItems(items, containerId, statusId) {
+    var container = document.getElementById(containerId);
+    var status = document.getElementById(statusId);
+
+    if (!items || items.length === 0) {
+      container.innerHTML = '<div class="status">no items found</div>';
+      return;
+    }
+
+    // sort by date desc
+    items.sort(function(a, b) {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return b.date - a.date;
+    });
+
+    container.innerHTML = items.slice(0, 6).map(function(item) {
+      return '<a class="feed-item" href="' + item.link + '" target="_blank">' +
+        '<div class="feed-source-row">' +
+          '<div class="feed-source-dot" style="background:' + item.color + '"></div>' +
+          '<div class="feed-source-name">' + item.source + '</div>' +
+          (item.date ? '<div class="feed-date">· ' + timeAgo(item.date) + '</div>' : '') +
+        '</div>' +
+        '<div class="feed-title">' + item.title + '</div>' +
+        '</a>';
+    }).join('');
+  }
+
+  function loadAll() {
+    ['tab-0','tab-1','tab-2'].forEach(function(id) {
+      var el = document.getElementById(id);
+      el.innerHTML = '<div class="status">loading...</div>';
+    });
+
+    mhItems = []; hpItems = []; allItems = [];
+
+    var mhPromises = SOURCES.mentalHealth.map(fetchFeed);
+    var hpPromises = SOURCES.healthPolicy.map(fetchFeed);
+
+    Promise.all(mhPromises).then(function(results) {
+      results.forEach(function(items) { mhItems = mhItems.concat(items); });
+      renderItems(mhItems, 'tab-0', 'status-0');
+      allItems = allItems.concat(mhItems);
+      renderItems(allItems, 'tab-2', 'status-2');
+    });
+
+    Promise.all(hpPromises).then(function(results) {
+      results.forEach(function(items) { hpItems = hpItems.concat(items); });
+      renderItems(hpItems, 'tab-1', 'status-1');
+      allItems = allItems.concat(hpItems);
+      renderItems(allItems, 'tab-2', 'status-2');
+    });
+
+    document.getElementById('last-updated').textContent =
+      'updated ' + new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function switchTab(idx) {
+    document.querySelectorAll('.tab').forEach(function(t, i) {
+      t.classList.toggle('active', i === idx);
+    });
+    document.querySelectorAll('.tab-content').forEach(function(c, i) {
+      c.classList.toggle('active', i === idx);
+    });
+  }
+
+  loadAll();
+</script>
+</body>
+</html>
