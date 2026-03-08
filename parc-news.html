@@ -4,220 +4,259 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PARC News</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
   html, body {
-    background: #ffffff;
-    font-family: 'Segoe UI', sans-serif;
+    background: #F3F2F1;
+    font-family: 'Segoe UI', -apple-system, sans-serif;
     font-size: 14px;
-  }
-
-  .widget {
-    background: #fff;
-    border-radius: 4px;
-    overflow: hidden;
-    width: 100%;
-  }
-
-  /* HEADER */
-  .widget-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px 0;
-    margin-bottom: 12px;
-  }
-  .widget-title {
-    font-size: 14px;
-    font-weight: 700;
     color: #2C3A52;
   }
+
+  .widget { background: #ffffff; border-radius: 2px; width: 100%; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .widget-header {
+    padding: 18px 20px 14px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 1px solid #EDEBE9;
+  }
+  .widget-title { font-size: 15px; font-weight: 600; color: #2C3A52; letter-spacing: -0.01em; display: flex; align-items: center; }
   .last-updated {
-    font-size: 10px;
-    color: #A19F9D;
-    font-weight: 600;
+    font-size: 10px; color: #C8C6C4; font-weight: 400;
+    cursor: default; position: relative;
+  }
+  .last-updated:hover .ts-tooltip { opacity: 1; pointer-events: none; }
+  .ts-tooltip {
+    position: absolute; right: 0; top: 18px;
+    background: #2C3A52; color: #fff;
+    font-size: 10px; font-weight: 500;
+    padding: 4px 8px; border-radius: 3px;
+    white-space: nowrap; opacity: 0;
+    transition: opacity 0.15s; pointer-events: none;
+    z-index: 10;
+  }
+  .ts-tooltip::before {
+    content: '';
+    position: absolute; top: -4px; right: 10px;
+    border: 4px solid transparent;
+    border-bottom-color: #2C3A52; border-top: none;
   }
 
-  /* TABS */
+  /* ── TABS ── */
   .tab-bar {
-    display: flex;
+    display: flex; padding: 0 20px;
     border-bottom: 1px solid #EDEBE9;
-    padding: 0 16px;
-    gap: 2px;
   }
   .tab {
-    padding: 7px 12px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #A19F9D;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-    user-select: none;
-    white-space: nowrap;
+    padding: 10px 14px 9px;
+    font-size: 12px; font-weight: 600; color: #A19F9D;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: color 0.15s;
+    user-select: none; display: flex; align-items: center; gap: 5px;
   }
-  .tab:hover { color: #4A3D6B; }
-  .tab.active { color: #4A3D6B; border-bottom-color: #4A3D6B; }
+  .tab:hover { color: #4A5A7A; }
+  .tab.active { color: #4A5A7A; border-bottom-color: #4A5A7A; }
 
-  /* CONTENT */
-  .tab-content { display: none; padding: 12px 16px 8px; }
+  .tab-badge {
+    font-size: 9px; font-weight: 700;
+    background: #EDF0F5; color: #8A7AAA;
+    border-radius: 20px; padding: 1px 5px;
+    transition: all 0.2s;
+    opacity: 0;
+  }
+  .tab-badge.visible { opacity: 1; }
+  .tab.active .tab-badge { background: #E8E4F0; color: #6B5B8A; }
+
+  /* ── CONTENT ── */
+  .tab-content { display: none; }
   .tab-content.active { display: block; }
 
-  /* LOADING / ERROR */
-  .status {
-    font-size: 12px;
-    color: #A19F9D;
-    font-weight: 600;
-    padding: 16px 0;
-    text-align: center;
+  /* ── TYPEWRITER ── */
+  .typewriter-wrap {
+    padding: 24px 20px;
+    display: flex; align-items: center; gap: 2px;
   }
+  .typewriter-text {
+    font-size: 12px; font-weight: 500; color: #A19F9D;
+    overflow: hidden; white-space: nowrap;
+    width: 0; animation: typing 1.6s steps(22, end) forwards;
+  }
+  .typewriter-cursor {
+    width: 1.5px; height: 13px; background: #C0CCDC;
+    animation: blink 0.7s step-end infinite;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  @keyframes typing { from { width: 0; } to { width: 160px; } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-  /* FEED ITEMS */
+  /* ── FEED ── */
+  .feed-wrap { padding: 4px 20px 0; }
+
   .feed-item {
-    padding: 10px 0;
-    border-bottom: 1px solid #F3F2F1;
-    cursor: pointer;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; padding: 14px 0; border-bottom: 1px solid #F3F2F1;
     text-decoration: none;
-    display: block;
-    transition: all 0.1s;
+    opacity: 0; transform: translateY(4px);
+    animation: fadeUp 0.3s ease forwards;
   }
-  .feed-item:first-child { padding-top: 0; }
-  .feed-item:last-child { border-bottom: none; padding-bottom: 4px; }
-  .feed-item:hover .feed-title { color: #4A3D6B; }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item-body { flex: 1; min-width: 0; }
 
-  .feed-source-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  .feed-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+
+  /* PIP WITH TOOLTIP */
+  .pip-wrap { position: relative; display: flex; align-items: center; flex-shrink: 0; }
+  .feed-source-pip {
+    width: 5px; height: 5px; border-radius: 50%; cursor: default;
+    transition: transform 0.15s;
   }
-  .feed-source-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
+  .pip-wrap:hover .feed-source-pip { transform: scale(1.6); }
+  .pip-wrap:hover .pip-tooltip { opacity: 1; }
+  .pip-tooltip {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    background: #2C3A52; color: #fff;
+    font-size: 10px; font-weight: 500;
+    padding: 4px 8px; border-radius: 3px;
+    white-space: nowrap; opacity: 0;
+    transition: opacity 0.15s; pointer-events: none;
+    z-index: 10;
   }
+  .pip-tooltip::before {
+    content: '';
+    position: absolute; left: -4px; top: 50%; transform: translateY(-50%);
+    border: 4px solid transparent;
+    border-right-color: #2C3A52; border-left: none;
+  }
+
   .feed-source-name {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #A19F9D;
+    font-size: 10px; font-weight: 600; color: #A19F9D;
+    text-transform: uppercase; letter-spacing: 0.06em;
   }
-  .feed-date {
-    font-size: 10px;
-    color: #C8C6C4;
-    font-weight: 600;
-  }
-  .feed-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: #2C3A52;
-    line-height: 1.45;
-    transition: color 0.1s;
-  }
+  .feed-sep { font-size: 10px; color: #D0CECE; }
+  .feed-date { font-size: 10px; color: #C8C6C4; }
 
-  /* FOOTER */
+  .feed-title {
+    font-size: 13px; font-weight: 500; color: #2C3A52;
+    line-height: 1.5; transition: color 0.12s;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .feed-item:hover .feed-title { color: #4A5A7A; }
+
+  .feed-read-hint {
+    font-size: 10px; font-weight: 600; color: #C0CCDC;
+    flex-shrink: 0; align-self: center;
+    opacity: 0; transform: translateX(-4px);
+    transition: all 0.15s ease; white-space: nowrap;
+  }
+  .feed-item:hover .feed-read-hint { opacity: 1; transform: translateX(0); color: #8A7AAA; }
+
+  /* ── EMPTY ── */
+  .empty { padding: 28px 20px; font-size: 12px; color: #C8C6C4; text-align: center; }
+
+  /* ── FOOTER ── */
   .widget-footer {
-    padding: 8px 16px 12px;
-    text-align: center;
-    border-top: 1px solid #EDEBE9;
+    padding: 10px 20px 14px; border-top: 1px solid #F3F2F1;
+    display: flex; align-items: center; justify-content: flex-end;
   }
   .refresh-btn {
-    font-size: 11px;
-    font-weight: 600;
-    color: #8A7AAA;
-    cursor: pointer;
-    background: none;
-    border: none;
-    font-family: inherit;
+    font-size: 11px; font-weight: 500; color: #C8C6C4;
+    cursor: pointer; background: none; border: none;
+    font-family: inherit; transition: color 0.15s; padding: 0;
+    display: flex; align-items: center; gap: 4px;
   }
-  .refresh-btn:hover { color: #4A3D6B; }
+  .refresh-btn:hover { color: #4A5A7A; }
+  .refresh-icon { display: inline-block; transition: transform 0.4s ease; }
+  .refresh-btn.spinning .refresh-icon { animation: spin 0.6s linear infinite; }
+  .refresh-btn.done { color: #7AAA8A; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-
 <div class="widget">
+
   <div class="widget-header">
-    <div class="widget-title">📰 news & updates</div>
-    <div class="last-updated" id="last-updated"></div>
+    <div class="widget-title">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right:7px;flex-shrink:0;">
+        <rect x="1" y="2" width="10" height="12" rx="1" stroke="#4A5A7A" stroke-width="1.2" fill="none"/>
+        <rect x="11" y="4" width="4" height="10" rx="1" stroke="#4A5A7A" stroke-width="1.2" fill="none"/>
+        <line x1="3.5" y1="5" x2="8.5" y2="5" stroke="#4A5A7A" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="3.5" y1="7.5" x2="8.5" y2="7.5" stroke="#4A5A7A" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="3.5" y1="10" x2="6.5" y2="10" stroke="#4A5A7A" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>news & updates
+    </div>
+    <div class="last-updated" id="last-updated">
+      <span id="last-updated-text"></span>
+      <div class="ts-tooltip" id="ts-tooltip">—</div>
+    </div>
   </div>
 
   <div class="tab-bar">
-    <div class="tab active" onclick="switchTab(0)">mental health</div>
-    <div class="tab" onclick="switchTab(1)">health policy</div>
-    <div class="tab" onclick="switchTab(2)">all</div>
+    <div class="tab active" onclick="switchTab(0)">mental health <span class="tab-badge" id="badge-0"></span></div>
+    <div class="tab" onclick="switchTab(1)">health policy <span class="tab-badge" id="badge-1"></span></div>
+    <div class="tab" onclick="switchTab(2)">all <span class="tab-badge" id="badge-2"></span></div>
   </div>
 
-  <div class="tab-content active" id="tab-0">
-    <div class="status" id="status-0">loading...</div>
-  </div>
-  <div class="tab-content" id="tab-1">
-    <div class="status" id="status-1">loading...</div>
-  </div>
-  <div class="tab-content" id="tab-2">
-    <div class="status" id="status-2">loading...</div>
-  </div>
+  <div class="tab-content active" id="tab-0"><div id="content-0"></div></div>
+  <div class="tab-content" id="tab-1"><div id="content-1"></div></div>
+  <div class="tab-content" id="tab-2"><div id="content-2"></div></div>
 
   <div class="widget-footer">
-    <button class="refresh-btn" onclick="loadAll()">↻ refresh</button>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">
+      <span class="refresh-icon">↻</span>
+      <span id="refresh-label">refresh</span>
+    </button>
   </div>
-</div>
 
+</div>
 <script>
   var RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
+  var SOURCE_META = {
+    'The Conversation': 'Independent academic analysis',
+    'SANE Australia':   'Mental health support & research',
+    'Mental Health AU': 'National peak body for mental health',
+    'AIHW':             'Australian health & welfare data',
+    'Croakey Health':   'Independent health policy journalism',
+  };
+
   var SOURCES = {
     mentalHealth: [
-      {
-        name: 'The Conversation',
-        url: 'https://theconversation.com/au/topics/mental-health-620/articles.atom',
-        color: '#8A7AAA'
-      },
-      {
-        name: 'Beyond Blue',
-        url: 'https://www.beyondblue.org.au/rss/news',
-        color: '#4A5A7A'
-      },
-      {
-        name: 'ABC Health',
-        url: 'https://www.abc.net.au/news/feed/51120/rss.xml',
-        color: '#7AAA8A'
-      }
+      { name: 'The Conversation', url: 'https://theconversation.com/au/topics/mental-health-620/articles.atom', color: '#8A7AAA' },
+      { name: 'SANE Australia',   url: 'https://www.sane.org/rss',                                             color: '#6B5B8A' },
+      { name: 'Mental Health AU', url: 'https://mhaustralia.org/rss.xml',                                      color: '#4A3D6B' },
     ],
     healthPolicy: [
-      {
-        name: 'Dept of Health',
-        url: 'https://www.health.gov.au/using-our-websites/subscribe/department-of-health-and-aged-care-news',
-        color: '#4A5A7A'
-      },
-      {
-        name: 'The Conversation',
-        url: 'https://theconversation.com/au/topics/health-policy-2485/articles.atom',
-        color: '#8A7AAA'
-      },
-      {
-        name: 'AIHW',
-        url: 'https://www.aihw.gov.au/rss/news',
-        color: '#6B8AAA'
-      }
+      { name: 'The Conversation', url: 'https://theconversation.com/au/topics/health-policy-2485/articles.atom', color: '#8A7AAA' },
+      { name: 'AIHW',             url: 'https://www.aihw.gov.au/rss/news',                                       color: '#6B5B8A' },
+      { name: 'Croakey Health',   url: 'https://www.croakey.org/feed/',                                          color: '#4A5A7A' },
     ]
   };
 
-  var allItems = [];
-  var mhItems  = [];
-  var hpItems  = [];
+  var mhItems = [], hpItems = [];
+  var loadedAt = null;
+
+  function typewriter() {
+    return '<div class="typewriter-wrap">' +
+      '<div class="typewriter-text">fetching the latest...</div>' +
+      '<div class="typewriter-cursor"></div>' +
+      '</div>';
+  }
 
   function fetchFeed(source) {
     return fetch(RSS2JSON + encodeURIComponent(source.url))
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (!data.items) return [];
-        return data.items.slice(0, 4).map(function(item) {
+        if (!data.items || !data.items.length) return [];
+        return data.items.slice(0, 5).map(function(item) {
           return {
-            title: item.title,
-            link:  item.link,
-            date:  item.pubDate ? new Date(item.pubDate) : null,
+            title:  item.title,
+            link:   item.link,
+            date:   item.pubDate ? new Date(item.pubDate) : null,
             source: source.name,
             color:  source.color
           };
@@ -229,76 +268,112 @@
   function timeAgo(date) {
     if (!date) return '';
     var diff = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 3600)   return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400)  return Math.floor(diff / 3600) + 'h ago';
     if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
     return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
   }
 
-  function renderItems(items, containerId, statusId) {
-    var container = document.getElementById(containerId);
-    var status = document.getElementById(statusId);
+  function setBadge(id, count) {
+    var el = document.getElementById(id);
+    el.textContent = count;
+    if (count > 0) el.classList.add('visible');
+  }
 
+  function renderItems(items, contentId) {
+    var el = document.getElementById(contentId);
     if (!items || items.length === 0) {
-      container.innerHTML = '<div class="status">no items found</div>';
+      el.innerHTML = '<div class="empty">nothing to show right now — try refreshing ☁️</div>';
       return;
     }
-
-    // sort by date desc
     items.sort(function(a, b) {
-      if (!a.date) return 1;
-      if (!b.date) return -1;
-      return b.date - a.date;
+      if (!a.date) return 1; if (!b.date) return -1; return b.date - a.date;
     });
+    var slice = items.slice(0, 6);
+    el.innerHTML = '<div class="feed-wrap">' +
+      slice.map(function(item, i) {
+        var meta = SOURCE_META[item.source] || item.source;
+        return '<a class="feed-item" href="' + item.link + '" target="_blank" style="animation-delay:' + (i * 0.06) + 's">' +
+          '<div class="feed-item-body">' +
+            '<div class="feed-meta">' +
+              '<div class="pip-wrap">' +
+                '<div class="feed-source-pip" style="background:' + item.color + '"></div>' +
+                '<div class="pip-tooltip">' + item.source + ' · ' + meta + '</div>' +
+              '</div>' +
+              '<span class="feed-source-name">' + item.source + '</span>' +
+              (item.date ? '<span class="feed-sep">·</span><span class="feed-date">' + timeAgo(item.date) + '</span>' : '') +
+            '</div>' +
+            '<div class="feed-title">' + item.title + '</div>' +
+          '</div>' +
+          '<div class="feed-read-hint">→ read</div>' +
+          '</a>';
+      }).join('') +
+      '</div>';
+    return slice.length;
+  }
 
-    container.innerHTML = items.slice(0, 6).map(function(item) {
-      return '<a class="feed-item" href="' + item.link + '" target="_blank">' +
-        '<div class="feed-source-row">' +
-          '<div class="feed-source-dot" style="background:' + item.color + '"></div>' +
-          '<div class="feed-source-name">' + item.source + '</div>' +
-          (item.date ? '<div class="feed-date">· ' + timeAgo(item.date) + '</div>' : '') +
-        '</div>' +
-        '<div class="feed-title">' + item.title + '</div>' +
-        '</a>';
-    }).join('');
+  function setRefreshDone() {
+    var btn = document.getElementById('refresh-btn');
+    var label = document.getElementById('refresh-label');
+    btn.classList.remove('spinning');
+    btn.classList.add('done');
+    label.textContent = '✓ up to date';
+    setTimeout(function() {
+      btn.classList.remove('done');
+      label.textContent = 'refresh';
+    }, 2000);
   }
 
   function loadAll() {
-    ['tab-0','tab-1','tab-2'].forEach(function(id) {
+    var btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    btn.classList.remove('done');
+    document.getElementById('refresh-label').textContent = 'refresh';
+
+    ['content-0','content-1','content-2'].forEach(function(id) {
+      document.getElementById(id).innerHTML = typewriter();
+    });
+    ['badge-0','badge-1','badge-2'].forEach(function(id) {
       var el = document.getElementById(id);
-      el.innerHTML = '<div class="status">loading...</div>';
+      el.textContent = ''; el.classList.remove('visible');
     });
 
-    mhItems = []; hpItems = []; allItems = [];
+    mhItems = []; hpItems = [];
+    loadedAt = new Date();
 
-    var mhPromises = SOURCES.mentalHealth.map(fetchFeed);
-    var hpPromises = SOURCES.healthPolicy.map(fetchFeed);
+    var fullDate = loadedAt.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) +
+      ' · ' + loadedAt.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('last-updated-text').textContent =
+      loadedAt.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('ts-tooltip').textContent = 'last updated ' + fullDate;
 
-    Promise.all(mhPromises).then(function(results) {
-      results.forEach(function(items) { mhItems = mhItems.concat(items); });
-      renderItems(mhItems, 'tab-0', 'status-0');
-      allItems = allItems.concat(mhItems);
-      renderItems(allItems, 'tab-2', 'status-2');
+    var mhDone = false, hpDone = false;
+    function checkDone() {
+      if (mhDone && hpDone) setRefreshDone();
+    }
+
+    Promise.all(SOURCES.mentalHealth.map(fetchFeed)).then(function(results) {
+      results.forEach(function(i) { mhItems = mhItems.concat(i); });
+      var n = renderItems(mhItems, 'content-0');
+      setBadge('badge-0', mhItems.slice(0,6).length);
+      renderItems(mhItems.concat(hpItems), 'content-2');
+      setBadge('badge-2', Math.min(6, mhItems.length + hpItems.length));
+      mhDone = true; checkDone();
     });
 
-    Promise.all(hpPromises).then(function(results) {
-      results.forEach(function(items) { hpItems = hpItems.concat(items); });
-      renderItems(hpItems, 'tab-1', 'status-1');
-      allItems = allItems.concat(hpItems);
-      renderItems(allItems, 'tab-2', 'status-2');
+    Promise.all(SOURCES.healthPolicy.map(fetchFeed)).then(function(results) {
+      results.forEach(function(i) { hpItems = hpItems.concat(i); });
+      renderItems(hpItems, 'content-1');
+      setBadge('badge-1', hpItems.slice(0,6).length);
+      renderItems(mhItems.concat(hpItems), 'content-2');
+      setBadge('badge-2', Math.min(6, mhItems.length + hpItems.length));
+      hpDone = true; checkDone();
     });
-
-    document.getElementById('last-updated').textContent =
-      'updated ' + new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
   }
 
   function switchTab(idx) {
-    document.querySelectorAll('.tab').forEach(function(t, i) {
-      t.classList.toggle('active', i === idx);
-    });
-    document.querySelectorAll('.tab-content').forEach(function(c, i) {
-      c.classList.toggle('active', i === idx);
-    });
+    document.querySelectorAll('.tab').forEach(function(t, i) { t.classList.toggle('active', i === idx); });
+    document.querySelectorAll('.tab-content').forEach(function(c, i) { c.classList.toggle('active', i === idx); });
   }
 
   loadAll();
