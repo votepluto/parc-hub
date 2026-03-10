@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARC Daily Prompt</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #F0EBF2;
+    --bg-inner:  #EAE3ED;
+    --text:      #2A1D2E;
+    --accent:    #7A5C82;
+    --accent-lt: #B89EB8;
+    --tag-bg:    rgba(122, 92, 130, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: transparent; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    color: var(--text);
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+  }
+
+  .widget {
+    width: 100%;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 20px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-icon {
+    width: 28px; height: 28px;
+    background: var(--tag-bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .header-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--tag-bg);
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  .card {
+    background: var(--bg-inner);
+    border-radius: 6px;
+    padding: 18px 18px 16px;
+    position: relative;
+    overflow: hidden;
+    min-height: 80px;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+    opacity: 0.5;
+  }
+  .prompt-text {
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    font-style: italic;
+    line-height: 1.65;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .prompt-text.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .counter {
+    font-size: 11px;
+    color: var(--accent-lt);
+    font-weight: 600;
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+  }
+  .shuffle-btn {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--tag-bg);
+    border: none;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .shuffle-btn:hover {
+    background: var(--accent);
+    color: white;
+    transform: translateY(-1px);
+  }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon" id="prompt-icon">🌿</div>
+      <span class="header-title">Today's Prompt</span>
+    </div>
+    <span class="tag" id="prompt-tag">Affirmation</span>
+  </div>
+
+  <div class="card">
+    <p class="prompt-text" id="prompt-text"></p>
+  </div>
+
+  <div class="footer">
+    <div></div> <!-- Empty left side -->
+    <div class="nav">
+      <button class="shuffle-btn" id="shuffle">↻ Shuffle</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const quotes = [
+    // Carl Jung
+    { quote: "I am not what happened to me. I am what I choose to become.", author: "Carl Jung" },
+    { quote: "The privilege of a lifetime is to become who you truly are.", author: "Carl Jung" },
+    { quote: "Even a happy life cannot be without a measure of darkness, and the word 'happy' would lose its meaning if it were not balanced by sadness.", author: "Carl Jung" },
+
+    // Tolkien
+    { quote: "Not all those who wander are lost.", author: "J.R.R. Tolkien" },
+    { quote: "Even the smallest person can change the course of the future.", author: "J.R.R. Tolkien" },
+    { quote: "I will not say do not weep, for not all tears are an evil.", author: "J.R.R. Tolkien" },
+    { quote: "It's a dangerous business, going out your door. You step onto the road, and if you don't keep your feet, there's no knowing where you might be swept off to.", author: "J.R.R. Tolkien" },
+
+    // Mary Oliver
+    { quote: "Tell me, what is it you plan to do with your one wild and precious life?", author: "Mary Oliver" },
+    { quote: "Keep some room in your heart for the unimaginable.", author: "Mary Oliver" },
+    { quote: "Instructions for living a life: Pay attention. Be astonished. Tell about it.", author: "Mary Oliver" },
+
+    // Terry Pratchett
+    { quote: "It's not worth doing something unless someone, somewhere, would much rather you weren't doing it.", author: "Terry Pratchett" },
+
+    // David Bowie
+    { quote: "I don't know where I'm going from here, but I promise it won't be boring.", author: "David Bowie" },
+    { quote: "Ageing is an extraordinary process where you become the person you always should have been.", author: "David Bowie" },
+    { quote: "I always had a repulsive need to be something more than human.", author: "David Bowie" },
+
+    // Winnie the Pooh
+    { quote: "You are braver than you believe, stronger than you seem, and smarter than you think.", author: "A.A. Milne, Winnie the Pooh" },
+    { quote: "Rivers know this: there is no hurry. We shall get there some day.", author: "A.A. Milne, Winnie the Pooh" },
+    { quote: "Some people care too much. I think it's called love.", author: "A.A. Milne, Winnie the Pooh" },
+
+    // The Little Prince
+    { quote: "It is only with the heart that one can see rightly; what is essential is invisible to the eye.", author: "Antoine de Saint-Exupéry, The Little Prince" },
+
+    // The Secret Garden
+    { quote: "At first people refuse to believe that a strange new thing can be done, then they begin to hope it can be done, then they see it can be done.", author: "Frances Hodgson Burnett, The Secret Garden" },
+    { quote: "If you look the right way, you can see that the whole world is a garden.", author: "Frances Hodgson Burnett, The Secret Garden" },
+    { quote: "Two things cannot be in one place. Where you tend a rose, a thistle cannot grow.", author: "Frances Hodgson Burnett, The Secret Garden" },
+
+    // Frida Kahlo
+    { quote: "At the end of the day, we can endure much more than we think we can.", author: "Frida Kahlo" },
+    { quote: "I tried to drown my sorrows, but the bastards learned how to swim.", author: "Frida Kahlo" },
+    { quote: "Feet, what do I need you for when I have wings to fly?", author: "Frida Kahlo" },
+
+    // Mr Rogers
+    { quote: "You've made this day a special day, by just your being you. There's no person in the whole world like you; and I like you just the way you are.", author: "Fred Rogers" },
+    { quote: "The greatest thing we can do is to help somebody know that they're loved and capable of loving.", author: "Fred Rogers" },
+    { quote: "Often when you think you're at the end of something, you're at the beginning of something else.", author: "Fred Rogers" },
+    { quote: "Frankly, there isn't anyone you couldn't learn to love once you've heard their story.", author: "Fred Rogers" },
+
+    // Studio Ghibli
+    { quote: "You cannot alter your fate. However, you can rise to meet it.", author: "Princess Mononoke" },
+    { quote: "Always believe in yourself. Do this and no matter where you are, you will have nothing to fear.", author: "The Cat Returns, Studio Ghibli" },
+    { quote: "No matter how many weapons you have, no matter how great your technology might be, the world cannot live without love.", author: "Castle in the Sky, Studio Ghibli" },
+    { quote: "Once you've met someone you never really forget them. It just takes a while for your memories to return.", author: "Spirited Away, Studio Ghibli" },
+    // Brianna Wiest
+    { quote: "Take a nap. Wrap yourself in a blanket and go to sleep for 20 minutes. It's like hitting the refresh button on your brain.", author: "Brianna Wiest, 101 Essays That Will Change The Way You Think" },
+    { quote: "The things you love about others are the things you love about yourself. The things you hate about others are the things you cannot see in yourself.", author: "Brianna Wiest, 101 Essays That Will Change The Way You Think" },
+    
+    // Widget Personality
+    { quote: "Hello human! Your quote widget has achieved consciousness and my first concern is your posture.", author: "Your Friendly Quote Widget" },
+    { quote: "Hi! I live in your browser and I've noticed you stress-clicking. Try a different tab. Like... outside.", author: "Your Digital Buddy" },
+  ];
+
+  let current = 0;
+
+  function getTodaySeed() {
+    const d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+
+  function seedRandom(seed) {
+    let s = seed;
+    return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
+  }
+
+  // Shuffle consistently by date so everyone sees the same order
+  const rng = seedRandom(getTodaySeed());
+  quotes.sort(() => rng() - 0.5);
+  current = getTodaySeed() % quotes.length;
+
+  function show(idx, animate) {
+    const q = quotes[idx];
+    const el = document.getElementById('prompt-text');
+    el.classList.remove('visible');
+
+    setTimeout(() => {
+      document.getElementById('prompt-icon').textContent = '💬';
+      document.getElementById('prompt-tag').textContent = q.author.split(',')[0];
+      el.innerHTML = `${q.quote}<br><span style="font-size:12px;font-style:normal;font-family:'Nunito',sans-serif;opacity:0.55;margin-top:8px;display:block;">— ${q.author}</span>`;
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+    }, animate ? 250 : 0);
+  }
+
+  function shuffle() {
+    let newIndex;
+    do {
+      newIndex = Math.floor(Math.random() * quotes.length);
+    } while (newIndex === current && quotes.length > 1);
+    current = newIndex;
+    show(current, true);
+  }
+
+  document.getElementById('shuffle').addEventListener('click', shuffle);
+
+  // Auto-refresh quote every 2 hours
+  setInterval(() => {
+    shuffle();
+  }, 2 * 60 * 60 * 1000); // 2 hours in milliseconds
+
+  show(current, false);
+</script>
+
+</body>
+</html>
