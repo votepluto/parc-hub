@@ -6,19 +6,33 @@
 <title>PARC Bar</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg:       #F0EBF2;
+    --bg-hover: #E6DFE9;
+    --text:     #2A1D2E;
+    --divider:  rgba(42, 29, 46, 0.22);
+    --accent:   #7A5C82;
+    --icon-sun: #c98a72;
+    --icon-cloud: #9B7EA0;
+    --icon-rain:  #7a8fb5;
+    --icon-snow:  #a8c0d6;
+    --icon-bolt:  #c9a84c;
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; background: transparent; overflow: hidden; }
   body { display: flex; align-items: center; justify-content: flex-start; padding: 0 2px; }
 
   .bar {
-    display: inline-flex;
+    display: flex;
+    width: 100%;
     align-items: center;
     gap: 0;
     font-family: 'Nunito', sans-serif;
     font-size: 14px;
     font-weight: 600;
-    color: #2C3A52;
-    background: #EDF0F5;
+    color: var(--text);
+    background: var(--bg);
     border-radius: 4px;
     overflow: hidden;
     white-space: nowrap;
@@ -26,14 +40,14 @@
     transition: background 0.2s;
     text-decoration: none;
   }
-  .bar:hover { background: #E0E6EF; }
+  .bar:hover { background: var(--bg-hover); }
 
   .seg { padding: 9px 16px; display: flex; align-items: center; gap: 7px; }
-  .divider { width: 1px; height: 20px; background: rgba(44, 58, 82, 0.2); flex-shrink: 0; }
-  .seg-greeting { font-weight: 700; }
+  .divider { width: 1px; height: 20px; background: var(--divider); flex-shrink: 0; }
+  .seg-greeting { font-weight: 700; color: var(--accent); }
   .seg-date     { font-weight: 600; }
   .seg-time     { font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
-  .seg-moon     { font-weight: 600; }
+  .seg-moon     { font-weight: 600; color: var(--accent); }
   .seg-weather  { font-weight: 600; }
 
   /* ── WEATHER ICON ANIMATIONS ── */
@@ -46,25 +60,30 @@
     transform: translate(-50%, -50%);
     width: 9px; height: 9px;
     border-radius: 50%;
-    background: #f5a623;
+    background: var(--icon-sun);
   }
   .sun-ray {
     position: absolute;
-    top: 50%; left: 50%;
+    top: 2px; left: 50%;
     width: 2px; height: 5px;
-    background: #f5a623;
+    background: var(--icon-sun);
     border-radius: 1px;
-    transform-origin: 50% 100%;
     margin-left: -1px;
-    margin-top: -10px;
+    transform-origin: 1px 8px;
   }
-  @keyframes spin-slow { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
-  .sun-rays { position: absolute; top: 0; left: 0; width: 100%; height: 100%; animation: spin-slow 8s linear infinite; }
+  @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .sun-rays {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    animation: spin-slow 8s linear infinite;
+    transform-origin: 50% 50%;
+  }
 
   /* Cloud */
   .cloud {
     position: absolute;
-    background: #b0bec5;
+    background: var(--icon-cloud);
     border-radius: 10px;
   }
   .cloud-main { width: 14px; height: 8px; bottom: 4px; left: 3px; }
@@ -78,7 +97,7 @@
     top: 1px; right: 1px;
     width: 9px; height: 9px;
     border-radius: 50%;
-    background: #f5a623;
+    background: var(--icon-sun);
   }
 
   /* Rain */
@@ -86,7 +105,7 @@
     position: absolute;
     width: 2px;
     border-radius: 1px;
-    background: #5b9bd5;
+    background: var(--icon-rain);
   }
   @keyframes fall { 0% { opacity: 0; transform: translateY(-4px); } 60% { opacity: 1; } 100% { opacity: 0; transform: translateY(6px); } }
 
@@ -96,16 +115,16 @@
     bottom: 2px; left: 50%;
     transform: translateX(-50%);
     font-size: 11px;
-    color: #f5c623;
+    color: var(--icon-bolt);
+    animation: flash 1.2s ease-in-out infinite;
   }
   @keyframes flash { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
-  .bolt { animation: flash 1.2s ease-in-out infinite; }
 
   /* Snow */
   .snowflake {
     position: absolute;
     font-size: 9px;
-    color: #90caf9;
+    color: var(--icon-snow);
   }
   @keyframes snow-fall { 0% { opacity: 0; transform: translateY(-4px) rotate(0deg); } 60% { opacity: 1; } 100% { opacity: 0; transform: translateY(8px) rotate(180deg); } }
 
@@ -114,7 +133,7 @@
     position: absolute;
     height: 2px;
     border-radius: 1px;
-    background: #b0bec5;
+    background: var(--icon-cloud);
     left: 2px;
   }
   @keyframes fog-drift { 0%,100% { opacity: 0.4; transform: translateX(0); } 50% { opacity: 0.9; transform: translateX(2px); } }
@@ -206,7 +225,7 @@
         <div class="sun-circle"></div>
         <div class="sun-rays">
           ${[0,45,90,135,180,225,270,315].map(deg =>
-            `<div class="sun-ray" style="transform:rotate(${deg}deg) translateY(-9px)"></div>`
+            `<div class="sun-ray" style="transform:rotate(${deg}deg);"></div>`
           ).join('')}
         </div>`;
 
